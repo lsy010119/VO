@@ -1,0 +1,58 @@
+{
+    "options":
+    {
+
+        "VISUALIZE" : true,
+    
+        "COMMUNICATION" : false,
+    
+        "SIMULATION" : false
+    
+    },
+    
+    "inputs":
+    {
+    
+        "TARGET_ALTITUDE" : 10.0,
+    
+        "WP" : [  20.0 , 0.0 , 0.0 ],
+    
+        "MEAN_VELOCITY": 2.0,
+
+        "TAKEOFF_VELOCITY" : 1.5,
+
+        "TRAJ_UPDATE_PERIOD" : 1,
+    
+        "TAKEOFF_TRAJ_UPDATE_PERIOD" : 3
+    
+    },
+
+    "controller":
+    {
+
+        "TIME_INTERVAL" : 0.1
+
+    },
+
+    "lidar_processor":
+    {
+
+        "GRID_SIZE" : 0.2,
+    
+        "THRESHOLD" : 1,
+    
+        "MAX_RANGE" : 20,
+   
+        "EXPENSION_SIZE" : 5
+
+    },
+
+    "communicator":
+    {
+        
+        "SERVER_IP" : "165.246.139.32",
+        
+        "SERVER_PORT" : 9502
+
+    }
+}
