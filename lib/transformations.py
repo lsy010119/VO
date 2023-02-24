@@ -1,4 +1,4 @@
-from numpy import array, zeros, ones, eye, trace, block, reshape, sin, cos, tan, arcsin, arccos, pi
+from numpy import array, deg2rad, zeros, ones, eye, trace, block, reshape, sin, cos, tan, arcsin, arccos, pi
 from numpy.linalg import norm,inv
 
 
@@ -9,22 +9,23 @@ from numpy.linalg import norm,inv
 
 
 
-def Eular2R(x, y, z, dir=0):
+def Eular2R(pose, dir=0):
     '''
     ### Eular2R
 
     Calculate Rotation Matrix from Eular Angle
 
-    Input   : Roll : rad, Pitch : rad, Yaw : rad, dir : bool 
+    Input   : Roll : deg, Pitch : deg, Yaw : deg, dir : bool 
     
     Output  : Rotation Body to World ( X_W = R @ X_B ) : if dir = 0
 
               Rotation world to Body ( X_B = R @ X_W ) : if dir = 1
     '''
+    x,y,z = deg2rad(pose[0]),deg2rad(pose[1]),deg2rad(pose[2])
 
-    Rf_r = array([[ 1, cos(x), sin(x) ],
-                  [ 0,-sin(x), cos(x) ],
-                  [ 0,      0,     0  ]])
+    Rf_r = array([[ 1,       0,     0 ],
+                  [ 0, cos(x), sin(x) ],
+                  [ 0,-sin(x), cos(x) ]])
 
     Rf_p = array([[ cos(y), 0, -sin(y) ],
                   [      0, 1,      0  ],
@@ -33,7 +34,6 @@ def Eular2R(x, y, z, dir=0):
     Rf_y = array([[ cos(z), sin(z), 0 ],
                   [-sin(z), cos(z), 0 ],
                   [      0,      0, 1  ]])
-
 
     if dir == 0: # Body to World
 
