@@ -1,13 +1,13 @@
 from numpy import array, zeros, ones, eye, trace, sin, cos, tan, arcsin, arccos, pi
 from numpy.linalg import norm,inv
 
-
+from lib.transformations    import *
 
 class DataHub:
 
 
 
-    def __init__(self, K, img_size, params, T_W2B_init):
+    def __init__(self, camera_info, params, inits ):
         '''
         # DataHub
 
@@ -30,21 +30,21 @@ class DataHub:
         """ Camera Info """
         
         ### Camera Matrix ###
-        self.K                              = K
-        self.K_inv                          = inv(K)
+        self.K                              = camera_info["CAMERA_MTX"]
+        self.K_inv                          = inv(self.K)
         
         ### Image Size ###
-        self.img_size                       = img_size
+        self.img_size                       = camera_info["IMG_SIZE"]
 
 
         """ Parameters """
         
         ### Optimization Parameters ###
-        self.param_stpcrt                   = params[0]
-        self.param_maxitr                   = params[1]
+        self.param_stpcrt                   = params["PARAM_STOPPING_CRITERION"]
+        self.param_maxitr                   = params["PARAM_MAX_ITERATION"]
 
         ### Translation Scale Parameter ###
-        self.param_scale                    = params[2]
+        self.param_scale                    = params["PARAM_SCALE"]
 
 
         """ Optimizer Matrices """
@@ -57,4 +57,7 @@ class DataHub:
         """ Poses """
         
         ### Initial Camera Pose ###
-        self.T_W2B_init                     = T_W2B_init
+        self.T_W2B_init                     = T_W2B(Eular2R(inits["INIT_POSE"],dir=1),\
+                                                    inits["INIT_LOCATION"])
+
+        print(self.T_W2B_init)

@@ -1,0 +1,32 @@
+{
+    "camera_info":
+    {
+
+        "CAMERA_MTX"                : [[ 300.0 , 0.0,   200.0 ],
+                                       [ 0.0   , 300.0, 100.0 ],
+                                       [ 0.0   , 0.0,       1 ]],
+    
+        "IMG_SIZE"                  : [ 200, 400 ]
+        
+    },
+    
+    "params":
+    {
+    
+        "PARAM_STOPPING_CRITERION"  : 0.1,
+    
+        "PARAM_MAX_ITERATION"       : 300,
+    
+        "PARAM_SCALE"               : 1.0
+
+    },
+
+    "init":
+    {
+
+        "INIT_POSE"                 : [ -90, 0, 0 ],
+
+        "INIT_LOCATION"             : [ 0, 0, 0 ]
+
+    }
+}

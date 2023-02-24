@@ -1,6 +1,6 @@
 from numpy import array, zeros, ones, eye, trace, reshape, sin, cos, tan, arcsin, arccos, pi
 from numpy.linalg import norm,inv
-from lib.cam            import Cam
+from structs.cam            import Cam
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
