@@ -28,22 +28,22 @@ class Cam:
         self.img = img
 
         ### Camera Pose ###
-        self.T_W2B = T_W2B                  # X_B = T_W2B @ T_W
-        self.T_B2W = inv(T_W2B)             # X_W = T_B2W @ T_B
+        self.T_W2B = T_W2B                      # X_B = T_W2B @ T_W
+        self.T_B2W = inv(T_W2B)                 # X_W = T_B2W @ T_B
 
         ### Extracted Features ###
-        self.keypoints = array([])          # Keypoints
-        self.desc      = array([])          # SIFT Descriptors
+        self.keypoints = array([])              # Keypoints
+        self.desc      = array([])              # SIFT Descriptors
 
         ### Point Coordinates ###
-        self.points3D = array([])           # Body Coordinate 3D Points
+        self.points3D = array([])               # Body Coordinate 3D Points
         
-        self.triangulated_kp = array([])    # Indices of Keypoints Triangulated
+        self.points3D_with_prev = array([])     # Body Coordinate 3D Points triangulated with prev frame
+        self.points3D_with_curr = array([])     # Body Coordinate 3D Points triangulated with next frame
+
+        self.tri_with_prev = array([])          # Indices of Points triangulated with prev frame
+        self.tri_with_next = array([])          # Indices of Points triangulated with next frame
 
         ### Intensity ###
-        self.intensity = array([])          # Intensity of keypoints
-
-
-    def FuckMySelf(self):
-
-        pass
+        self.intensity_with_prev = array([])    # Intensity of keypoints matched with prev frame
+        self.intensity_with_curr = array([])    # Intensity of keypoints matched with curr frame

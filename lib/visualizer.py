@@ -1,11 +1,12 @@
-from numpy import array, zeros, ones, eye, trace, reshape, sin, cos, tan, arcsin, arccos, pi
-from numpy.linalg import norm,inv
+from numpy                  import array, zeros, ones, eye, trace, reshape, sin, cos, tan, arcsin, arccos, pi
+from numpy.linalg           import norm,inv
+
 from structs.cam            import Cam
+from lib.transformations    import *
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d   import Axes3D
+import matplotlib.pyplot    as plt
 
-from lib.transformations import *
 
 
 class Visualizer:
@@ -133,6 +134,19 @@ class Visualizer:
         # self.viz_ray(cam_estimated,'blue')
 
         return cam_estimated
+
+
+    def viz_trajec(self, cam_hist):
+
+        traj = zeros((3,len(cam_hist)))
+
+        for i,cam in enumerate(cam_hist):
+
+            self.viz_pose(cam.T_B2W)
+            
+            traj[:,i] = cam.T_B2W[:3,3]
+
+            self.viz_points(cam.T_B2W@cam.points3D_with_prev, cam.intensity_with_prev)
 
 
     def run(self):

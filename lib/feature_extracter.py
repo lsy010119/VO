@@ -18,5 +18,3 @@ class FeatureExtracter:
     def extract_feature(self, cam):
         
         cam.keypoints, cam.desc = self.extracter.detectAndCompute(cam.img,None)
-
-        cam.triangulated_kp    = zeros(len(cam.keypoints))

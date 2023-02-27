@@ -3,11 +3,13 @@ from numpy.linalg import norm,inv
 
 from lib.transformations    import *
 
+import rospy
+
 class DataHub:
 
 
 
-    def __init__(self, camera_info, params, inits ):
+    def __init__(self, camera_info, ros_info, params, inits ):
         '''
         # DataHub
 
@@ -19,12 +21,12 @@ class DataHub:
         """ Images """
         
         ### Frame ###
-        self.f_prev                         = array([])
-        self.f_curr                         = array([])
+        self.frame_prev                     = array([])
+        self.frame_curr                     = array([])
 
         ### KeyFrame ###
-        self.kf_prev                        = array([])
-        self.kf_prev                        = array([])
+        self.kframe_prev                    = array([])
+        self.kframe_prev                    = array([])
 
 
         """ Camera Info """
@@ -36,6 +38,12 @@ class DataHub:
         
         ### Image Size ###
         self.img_size                       = camera_info["IMG_SIZE"]
+
+
+        """ ROS Info """
+
+        ### Image Topic Name ###
+        self.topic_name                     = ros_info["TOPIC_NAME"]
 
 
         """ Parameters """
@@ -56,8 +64,7 @@ class DataHub:
 
         """ Points """
         self.points3D                       = []
-        self.matchidx                       = []
-        self.matchidx_filtered              = []
+
 
         """ Poses """
         

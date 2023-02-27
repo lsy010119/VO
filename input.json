@@ -11,6 +11,15 @@
         "IMG_SIZE"                  : [ 480, 640 ]
         
     },
+
+    "ros_info":
+    {
+
+        "NODE_NAME"                 : "VO",
+
+        "TOPIC_NAME"                : "/usb_cam/image_raw"
+
+    },
     
     "params":
     {
