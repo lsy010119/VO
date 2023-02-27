@@ -148,6 +148,8 @@ class Visualizer:
 
             self.viz_points(cam.T_B2W@cam.points3D_with_prev, cam.intensity_with_prev)
 
+        self.world.plot(traj[0],traj[1],traj[2],'r-')
+
 
     def run(self):
 

@@ -128,6 +128,8 @@ class EpipolarGeom:
 
         points3D_B1_prev = cam_prev.points3D_with_prev
 
+        print(points3D_B1_prev)
+
         sum_Z_B1_prev_X_Z_B1_curr = 0
         sum_Z_B1_curr_X_Z_B1_curr = 0
 
@@ -143,7 +145,6 @@ class EpipolarGeom:
                 sum_Z_B1_prev_X_Z_B1_curr += Z_B1_prev * Z_B1_curr
                 sum_Z_B1_curr_X_Z_B1_curr += Z_B1_curr * Z_B1_curr
     
-        print(Z_B1_prev, Z_B1_curr)
 
         rel_scale = sum_Z_B1_prev_X_Z_B1_curr/sum_Z_B1_curr_X_Z_B1_curr
 

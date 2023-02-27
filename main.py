@@ -29,13 +29,49 @@ class VO:
 		
 		self.DataHub 			= DataHub(camera_info, ros_info, params, inits)
 
-		rospy.init_node(ros_info["NODE_NAME"])
+		# rospy.init_node(ros_info["NODE_NAME"])
 
-		self.Frame				= FrameHandler		(self.DataHub)
+		# self.Frame				= FrameHandler		(self.DataHub)
 		self.EplipolarGeom 		= EpipolarGeom		(self.DataHub)
 		self.FeatureExtracter	= FeatureExtracter	(self.DataHub)
 		self.FeatureMatcher		= FeatureMatcher	(self.DataHub)
 		self.Visualizer 		= Visualizer		(self.DataHub)
+
+
+	def run_test(self):
+
+		cam_list = []
+		cam_hist = []
+
+		for i in range(0,9,1):
+
+			img = cv2.imread("./frames/frame000"+str(i)+".jpg",0)
+			img_undist = cv2.undistort(img,self.DataHub.K,self.DataHub.dist_coeff)
+
+			cami = Cam(img_undist)
+
+			cam_list.append(cami)
+		
+		cam_list[0].T_W2B = self.DataHub.T_W2B_init
+		cam_list[0].T_B2W = inv(self.DataHub.T_W2B_init)
+
+		for i in range(1,9,1):
+
+			cam_prev = cam_list[i-1]
+			cam_curr = cam_list[i]
+
+			self.FeatureExtracter.extract_feature(cam_prev)
+			self.FeatureExtracter.extract_feature(cam_curr)
+
+			self.FeatureMatcher.match_feature(cam_prev,cam_curr)
+
+			T_B12B2 , cam_prev, cam_curr = self.EplipolarGeom.track_pose(cam_prev,cam_curr)
+
+			cam_hist.append(cam_curr)
+
+		self.Visualizer.viz_trajec(cam_hist)
+		self.Visualizer.run()
+
 
 
 	def run(self):
@@ -53,11 +89,10 @@ class VO:
 
 		time.sleep(0.1)
 
-		# while not rospy.is_shutdown():
 		start = time.time()
 		end = time.time()
 
-		while end-start < 50:
+		while end-start < 10:
 
 			cam_prev = cam_curr
 
@@ -69,17 +104,16 @@ class VO:
 
 			T_B12B2 , cam_prev, cam_curr = self.EplipolarGeom.track_pose(cam_prev,cam_curr)
 
-			# cam_hist.append(cam_curr)
+			cam_hist.append(cam_curr)
 
-			print(T_B12B2)
 			end = time.time()
 			time.sleep(1/30)
 
-		cv2.destroyAllWindows()
+		# cv2.destroyAllWindows()
 
 
-		# self.Visualizer.viz_trajec(cam_hist)
-		# self.Visualizer.run()
+		self.Visualizer.viz_trajec(cam_hist)
+		self.Visualizer.run()
 
 
 
@@ -98,4 +132,4 @@ if __name__ == "__main__":
 
 		VO_ = VO(camera_info, ros_info, params, inits)
 
-		VO_.run()
+		VO_.run_test()
