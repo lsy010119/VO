@@ -78,13 +78,15 @@ class Visualizer:
             self.world.scatter(point3D[0],point3D[1],point3D[2],color='black')
 
 
-    def viz_points(self,points):
+    def viz_points(self,points, intensity = []):
 
-        for i in range(len(points[0])):
+        if len(intensity) != 0:
 
-            point = points[:3,i]
+            self.world.scatter(points[0],points[1],points[2],c=intensity,cmap="Greys")
 
-            self.world.scatter(point[0],point[1],point[2],color='red')
+        else:
+
+            self.world.scatter(points[0],points[1],points[2],c='red')
 
 
     def viz_imgs(self):
@@ -133,10 +135,10 @@ class Visualizer:
         return cam_estimated
 
 
-    def run(self, points3D):
+    def run(self):
 
         self.viz_world()
-        self.viz_points3D(points3D)
+        # self.viz_points3D(points3D)
         # self.viz_imgs()
         # self.viz_poses()
 

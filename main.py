@@ -2,8 +2,8 @@ from numpy import array, deg2rad, zeros, ones, eye, trace, sin, cos, tan, arcsin
 from numpy.linalg import norm,inv
 
 from lib.transformations        import *
-from lib.datahub                import DataHub
-from lib.cam                    import Cam
+from structs.datahub                import DataHub
+from structs.cam                    import Cam
 from lib.epipolar_geom          import EpipolarGeom
 from visualizer                 import Visualizer
 

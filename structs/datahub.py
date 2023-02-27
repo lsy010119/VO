@@ -30,8 +30,9 @@ class DataHub:
         """ Camera Info """
         
         ### Camera Matrix ###
-        self.K                              = camera_info["CAMERA_MTX"]
+        self.K                              = array(camera_info["CAMERA_MTX"])
         self.K_inv                          = inv(self.K)
+        self.dist_coeff                     = array(camera_info["DIST_COEFF"])
         
         ### Image Size ###
         self.img_size                       = camera_info["IMG_SIZE"]
@@ -39,12 +40,15 @@ class DataHub:
 
         """ Parameters """
         
+        ### Feature Handling Paramters ###
+        self.PARAM_mtchth                   = params["PARAM_MATCH_THRESHOLD"]
+
         ### Optimization Parameters ###
-        self.param_stpcrt                   = params["PARAM_STOPPING_CRITERION"]
-        self.param_maxitr                   = params["PARAM_MAX_ITERATION"]
+        self.PARAM_stpcrt                   = params["PARAM_STOPPING_CRITERION"]
+        self.PARAM_maxitr                   = params["PARAM_MAX_ITERATION"]
 
         ### Translation Scale Parameter ###
-        self.param_scale                    = params["PARAM_SCALE"]
+        self.PARAM_scale                    = params["PARAM_SCALE"]
 
 
         """ Optimizer Matrices """
@@ -52,7 +56,8 @@ class DataHub:
 
         """ Points """
         self.points3D                       = []
-        
+        self.matchidx                       = []
+        self.matchidx_filtered              = []
 
         """ Poses """
         
@@ -60,4 +65,7 @@ class DataHub:
         self.T_W2B_init                     = T_W2B(Eular2R(inits["INIT_POSE"],dir=1),\
                                                     inits["INIT_LOCATION"])
 
-        print(self.T_W2B_init)
+
+        """ Flags """
+
+        self.FLAG_isFrameRecieved           = False

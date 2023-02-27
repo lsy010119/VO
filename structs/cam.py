@@ -28,13 +28,20 @@ class Cam:
         self.img = img
 
         ### Camera Pose ###
-        self.T_W2B = T_W2B          # X_B = T_W2B @ T_W
-        self.T_B2W = inv(T_W2B)     # X_W = T_B2W @ T_B
+        self.T_W2B = T_W2B                  # X_B = T_W2B @ T_W
+        self.T_B2W = inv(T_W2B)             # X_W = T_B2W @ T_B
+
+        ### Extracted Features ###
+        self.keypoints = array([])          # Keypoints
+        self.desc      = array([])          # SIFT Descriptors
 
         ### Point Coordinates ###
-        self.points3D = array([])   # Body Coordinate 3D Points
-        self.points2D = array([])   # Corisponding Image Point Coordinates
+        self.points3D = array([])           # Body Coordinate 3D Points
+        
+        self.triangulated_kp = array([])    # Indices of Keypoints Triangulated
 
+        ### Intensity ###
+        self.intensity = array([])          # Intensity of keypoints
 
 
     def FuckMySelf(self):

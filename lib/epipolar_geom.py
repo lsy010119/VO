@@ -1,4 +1,4 @@
-from numpy        import array, deg2rad, zeros, ones, eye, block, trace, sin, cos, tan, arcsin, arccos, pi
+from numpy        import array, deg2rad, where, zeros, ones, eye, block, trace, sin, cos, tan, arcsin, arccos, pi
 from numpy.linalg import norm,inv,svd
 import cv2
 
@@ -36,17 +36,24 @@ class EpipolarGeom:
             T_B12B2     : double 4 X 4
         '''
 
-        E,_ = cv2.findEssentialMat(points2D_B1[:2].T, points2D_B2[:2].T, self.DataHub.K, cv2.RANSAC)
+        E,mask = cv2.findEssentialMat(points2D_B1[:2].T, points2D_B2[:2].T, self.DataHub.K, cv2.RANSAC)
 
-        _,R,t,_ = cv2.recoverPose(E,points2D_B1[:2].T, points2D_B2[:2].T,self.DataHub.K)
+        inlier_idx = where(mask==1)[0]
+
+        self.DataHub.matchidx_filtered = [ self.DataHub.matchidx[i] for i in inlier_idx]
+
+        points2D_B1_inl = points2D_B1[:,inlier_idx]
+        points2D_B2_inl = points2D_B2[:,inlier_idx]
+
+        _,R,t,_ = cv2.recoverPose(E,points2D_B1_inl[:2].T, points2D_B2_inl[:2].T,self.DataHub.K)
 
         T_B12B2 = block([[R,scale*t],[0,0,0,1]])
 
-        return T_B12B2
+        return T_B12B2, points2D_B1_inl, points2D_B2_inl, inlier_idx
 
 
     
-    def estimate_P(self, points2D_B1, points2D_B2, T_B12B2): 
+    def estimate_P(self, points2D_B1, points2D_B2, T_B12B2, cam1, cam2): 
         '''
         ### Estimate 3D-Points
 
@@ -57,13 +64,15 @@ class EpipolarGeom:
             points2D_B1 : double 3 X N
             points2D_B2 : double 3 X N
             T_B12B2     : double 4 X 4
+            cam1        : Cam
+            cam2        : Cam
 
         Output
 
             points3D_B1 : double 4 X N
         '''
 
-        N = len(points2D_B1)
+        N = len(points2D_B1[0])
 
         P1 = self.DataHub.K@array( [[1,0,0,0],
                                     [0,1,0,0],
@@ -75,21 +84,26 @@ class EpipolarGeom:
 
         for i in range(N):
 
+            queryidx, trainidx = self.DataHub.matchidx_filtered[i]
+
             x1,y1 = points2D_B1[0,i],points2D_B1[1,i]
             x2,y2 = points2D_B2[0,i],points2D_B2[1,i]
 
             p1,p2,p3,p1_,p2_,p3_ = P1[0],P1[1],P1[2],P2[0],P2[1],P2[2]
 
-            A = block([[y1*p3-p2],
-                       [p1-x1*p3],
-                       [y2*p3_-p2_],
-                       [p1_-x2*p3_]])
+            A = block([[ y1*p3 - p2  ],
+                       [ p1 - x1*p3  ],
+                       [ y2*p3_-p2_  ],
+                       [ p1_ - x2*p3_]])
         
             _,_,VT = svd(A)
 
             point3D_B1 = VT[-1]/VT[-1,3]
 
             points3D_B1[:,i] = point3D_B1.T
+
+            cam1.triangulated_kp[queryidx] = 1
+            cam2.triangulated_kp[trainidx] = 1
 
         return points3D_B1
 
@@ -114,21 +128,22 @@ class EpipolarGeom:
 
         '''
 
-        scale = self.DataHub.param_scale
+        scale = self.DataHub.PARAM_scale
 
         points2D_B1 = cam_prev.points2D
         points2D_B2 = cam_curr.points2D
 
-        T_B12B2 = self.estimate_T(points2D_B1,points2D_B2,scale)
+        T_B12B2, points2D_B1_inl, points2D_B2_inl, inlier_idx = self.estimate_T(points2D_B1,points2D_B2,scale)
+
+        cam_curr.intensity = cam_curr.intensity[inlier_idx]
 
         points3D_B1_prev = cam_prev.points3D
-        points3D_B1_curr = self.estimate_P(points2D_B1,points2D_B2,T_B12B2)
+        points3D_B1_curr = self.estimate_P(points2D_B1_inl, points2D_B2_inl,T_B12B2, cam_prev, cam_curr)
 
 
         if len(points3D_B1_prev) == 0:
 
             cam_curr.points3D = T_B12B2@points3D_B1_curr
-
             cam_curr.T_W2B = T_B12B2@cam_prev.T_W2B
             cam_curr.T_B2W = inv(cam_curr.T_W2B)
 
