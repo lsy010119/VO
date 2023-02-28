@@ -37,7 +37,7 @@
     "init":
     {
 
-        "INIT_POSE"                 : [ -90, 0, 0 ],
+        "INIT_POSE"                 : [ -135, 0, 0 ],
 
         "INIT_LOCATION"             : [ 5, 0, 5 ]
 

@@ -1,4 +1,4 @@
-from numpy                      import array, deg2rad, zeros, ones, eye, trace, sin, cos, tan, arcsin, arccos, pi
+from numpy                      import array, diag , zeros, ones, eye, trace, sin, cos, tan, arcsin, arccos, deg2rad, pi
 from numpy.linalg               import norm,inv
 
 from structs.datahub            import DataHub
@@ -67,8 +67,10 @@ class VO:
 
 			T_B12B2 , cam_prev, cam_curr = self.EplipolarGeom.track_pose(cam_prev,cam_curr)
 
+
 			cam_hist.append(cam_curr)
 
+		self.Visualizer.viz_points(cam_curr.T_B2W@cam_curr.points3D_with_prev, cam_curr.intensity_with_prev)
 		self.Visualizer.viz_trajec(cam_hist)
 		self.Visualizer.run()
 
