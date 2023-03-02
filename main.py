@@ -43,7 +43,7 @@ class VO:
 		cam_list = []
 		cam_hist = []
 
-		for i in range(0,9,1):
+		for i in range(0,3,1):
 
 			img = cv2.imread("./frames/frame000"+str(i)+".jpg",0)
 			img_undist = cv2.undistort(img,self.DataHub.K,self.DataHub.dist_coeff)
@@ -55,7 +55,9 @@ class VO:
 		cam_list[0].T_W2B = self.DataHub.T_W2B_init
 		cam_list[0].T_B2W = inv(self.DataHub.T_W2B_init)
 
-		for i in range(1,9,1):
+		cam_hist.append(cam_list[0])
+
+		for i in range(1,3,1):
 
 			cam_prev = cam_list[i-1]
 			cam_curr = cam_list[i]
@@ -67,10 +69,10 @@ class VO:
 
 			T_B12B2 , cam_prev, cam_curr = self.EplipolarGeom.track_pose(cam_prev,cam_curr)
 
-
 			cam_hist.append(cam_curr)
 
-		self.Visualizer.viz_points(cam_curr.T_B2W@cam_curr.points3D_with_prev, cam_curr.intensity_with_prev)
+
+		# self.Visualizer.viz_points(cam_curr.T_B2W@cam_curr.points3D_with_prev, cam_curr.intensity_with_prev)
 		self.Visualizer.viz_trajec(cam_hist)
 		self.Visualizer.run()
 
@@ -106,7 +108,8 @@ class VO:
 
 			T_B12B2 , cam_prev, cam_curr = self.EplipolarGeom.track_pose(cam_prev,cam_curr)
 
-			cam_hist.append(cam_curr)
+			print(T_B12B2)
+			# cam_hist.append(cam_curr)
 
 			end = time.time()
 			time.sleep(1/30)

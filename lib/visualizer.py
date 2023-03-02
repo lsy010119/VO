@@ -146,7 +146,13 @@ class Visualizer:
             
             traj[:,i] = cam.T_B2W[:3,3]
 
-            # self.viz_points(cam.T_B2W@cam.points3D_with_prev, cam.intensity_with_prev)
+            self.world.text(cam.T_B2W[0,3],cam.T_B2W[1,3],cam.T_B2W[2,3],f"{i}",style="normal")
+
+            try:
+                self.viz_points(cam.T_B2W@cam.points3D_with_prev, cam.intensity_with_prev)
+            except: pass
+
+            print(i)
 
         self.world.plot(traj[0],traj[1],traj[2],'r-')
 

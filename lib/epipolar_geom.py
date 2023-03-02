@@ -58,7 +58,9 @@ class EpipolarGeom:
 
         is_purerot = False
 
-        if norm(diagonal(E)) < 0.001:
+        print(E,len(points2D_B1[0]))
+
+        if norm(diagonal(E)) < 0.01:
             ### Pure Rotation ###
 
             is_purerot = True
@@ -67,6 +69,8 @@ class EpipolarGeom:
             points3D_B2 = self.DataHub.K_inv @ points2D_B2
 
             R = points3D_B2 @ points3D_B1.T @ inv(points3D_B1 @ points3D_B1.T)
+
+            print(R)
 
             T_B12B2 = block([[R,zeros((3,1))],[0,0,0,1]])
 
@@ -166,6 +170,42 @@ class EpipolarGeom:
         return rel_scale
     
 
+    def propagate_P(self, cam_prev, cam_curr, T_B12B2):
+
+        prev_tri_with_prev = cam_prev.tri_with_prev
+        prev_tri_with_curr = cam_prev.tri_with_curr
+
+        matched_1 = zeros(len(prev_tri_with_prev)+len(prev_tri_with_curr), dtype=int)
+        matched_2 = zeros(len(prev_tri_with_prev)+len(prev_tri_with_curr), dtype=int)
+
+        matched_num = 0
+
+        for i, prev_kpidx in enumerate(prev_tri_with_prev):
+
+            j = where(prev_tri_with_curr == prev_kpidx)[0]
+
+            if len(j) != 0:
+
+                matched_1[matched_num] = i
+                matched_2[matched_num] = j
+
+                matched_num += 1
+
+        matched_1 = matched_1[:matched_num]
+        matched_2 = matched_2[:matched_num]
+
+        cam_prev.tri_with_curr          = cam_prev.tri_with_curr[matched_2]
+        cam_prev.intensity_with_curr    = cam_prev.intensity_with_curr[matched_2]
+        cam_prev.points3D_with_curr     = cam_prev.points3D_with_prev[:,matched_1]
+
+        cam_curr.tri_with_prev          = cam_curr.tri_with_prev[matched_2]
+        cam_curr.intensity_with_prev    = cam_curr.intensity_with_prev[matched_2]
+
+        points3D_B2 = T_B12B2 @ cam_prev.points3D_with_curr
+
+        return points3D_B2
+
+
     def track_pose(self, cam_prev, cam_curr):
         '''
         ### Pose Tracking
@@ -191,21 +231,24 @@ class EpipolarGeom:
         ### Estimate Transformation ###
         T_B12B2, is_purerot = self.estimate_T(cam_prev,cam_curr,scale)
 
-        ### Triangulate Points for Mapping and Calculating Relative Scale ###
         
+        ### Case #1 : Pure Rotation ###
         if is_purerot:
 
             points3D_B1_prev = cam_prev.points3D_with_prev
 
+            ### Case #1-a : Prev fram is an initial Frame ###
             if len(points3D_B1_prev) == 0:
 
+                ### Unable to Triangulate ###
                 cam_curr.T_W2B = T_B12B2@cam_prev.T_W2B
                 cam_curr.T_B2W = inv(cam_curr.T_W2B)
 
             else:
 
-                cam_prev.points3D_with_curr = cam_prev.points3D_with_prev
-                cam_curr.points3D_with_prev = T_B12B2 @ cam_prev.points3D_with_curr
+                ### Unable to Triangulate ###
+                cam_prev.points3D_with_curr = points3D_B1_prev
+                cam_curr.points3D_with_prev = self.propagate_P(cam_prev, cam_curr, T_B12B2)
 
                 cam_curr.T_W2B = T_B12B2@cam_prev.T_W2B
                 cam_curr.T_B2W = inv(cam_curr.T_W2B)
@@ -226,6 +269,9 @@ class EpipolarGeom:
 
 
             else:
+
+                print(points3D_B1_prev)
+                print(points3D_B1_curr)
 
                 rel_scale = self.estimate_rel_scale(cam_prev, points3D_B1_curr)
 
