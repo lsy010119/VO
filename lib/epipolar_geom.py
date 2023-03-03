@@ -1,4 +1,4 @@
-from numpy        import array, diagonal, where, zeros, ones, eye, block, trace, sin, cos, tan, arcsin, arccos, pi, deg2rad
+from numpy        import array, diagonal, where, zeros, ones, eye, block, trace, sqrt, sin, cos, tan, arcsin, arccos, pi, deg2rad
 from numpy.linalg import norm,inv,svd
 import cv2
 
@@ -19,7 +19,7 @@ class EpipolarGeom:
 
 
     
-    def estimate_T(self, cam_prev, cam_curr, scale):
+    def estimate_T(self, cam_prev, cam_curr):
         '''
         ### Estimate Transformation
 
@@ -36,8 +36,8 @@ class EpipolarGeom:
             T_B12B2     : double 4 X 4
         '''
 
-        points2D_B1 = cam_prev.points2D_with_curr
-        points2D_B2 = cam_curr.points2D_with_prev
+        points2D_B1 = cam_prev.query_points2D
+        points2D_B2 = cam_curr.train_points2D
 
         ### Find Essential Matrix ###
         E,mask = cv2.findEssentialMat(points2D_B1[:2].T, points2D_B2[:2].T, self.DataHub.K, cv2.RANSAC)
@@ -45,20 +45,18 @@ class EpipolarGeom:
         ### Outliers Filtering ###
         inlier_idx = where(mask==1)[0]
 
-        cam_prev.points2D_with_curr = cam_prev.points2D_with_curr[:,inlier_idx]
-        cam_curr.points2D_with_prev = cam_curr.points2D_with_prev[:,inlier_idx]
+        cam_prev.query_points2D = cam_prev.query_points2D[:,inlier_idx]
+        cam_curr.train_points2D = cam_curr.train_points2D[:,inlier_idx]
 
-        cam_prev.tri_with_curr = cam_prev.tri_with_curr[inlier_idx]
-        cam_curr.tri_with_prev = cam_curr.tri_with_prev[inlier_idx]
+        cam_prev.query_indices = cam_prev.query_indices[inlier_idx]
+        cam_curr.train_indices = cam_curr.train_indices[inlier_idx]
 
-        cam_prev.intensity_with_curr = cam_prev.intensity_with_curr[inlier_idx]
-        cam_curr.intensity_with_prev = cam_curr.intensity_with_prev[inlier_idx]
+        cam_prev.query_intensity = cam_prev.query_intensity[inlier_idx]
+        cam_curr.train_intensity = cam_curr.train_intensity[inlier_idx]
 
         ### Recovering Pose with Filetered Point Pairs ###
 
         is_purerot = False
-
-        print(E,len(points2D_B1[0]))
 
         if norm(diagonal(E)) < 0.01:
             ### Pure Rotation ###
@@ -70,21 +68,20 @@ class EpipolarGeom:
 
             R = points3D_B2 @ points3D_B1.T @ inv(points3D_B1 @ points3D_B1.T)
 
-            print(R)
-
             T_B12B2 = block([[R,zeros((3,1))],[0,0,0,1]])
 
         else:
             ### General Motion ###
 
-            _,R,t,_ = cv2.recoverPose(E,cam_prev.points2D_with_curr[:2].T, cam_curr.points2D_with_prev[:2].T,self.DataHub.K)
+            _,R,t,_ = cv2.recoverPose(E,cam_prev.query_points2D[:2].T, cam_curr.train_points2D[:2].T,self.DataHub.K)
 
-            T_B12B2 = block([[R,scale*t],[0,0,0,1]])
+
+            T_B12B2 = block([[R,t],[0,0,0,1]])
 
         return T_B12B2, is_purerot
 
     
-    def estimate_P(self, cam_prev, cam_curr, T_B12B2): 
+    def estimate_P_general(self, cam_prev, cam_curr, T_B12B2): 
         '''
         ### Estimate 3D-Points
 
@@ -104,7 +101,7 @@ class EpipolarGeom:
         '''
 
         ### Number of Points to Triangulate ###
-        N = len(cam_prev.points2D_with_curr[0])
+        N = len(cam_prev.query_points2D[0])
 
         ### Prev Frame Projection Matrix ###
         P1 = self.DataHub.K@array([[1,0,0,0],
@@ -115,8 +112,8 @@ class EpipolarGeom:
         P2 = self.DataHub.K@T_B12B2[:3,:]
 
         ### Matched 2D Points ###
-        points2D_B1 = cam_prev.points2D_with_curr
-        points2D_B2 = cam_curr.points2D_with_prev
+        points2D_B1 = cam_prev.query_points2D
+        points2D_B2 = cam_curr.train_points2D
 
         ### Init Memories ###
         points3D_B1 = zeros((4,N))
@@ -142,68 +139,81 @@ class EpipolarGeom:
         return points3D_B1
 
 
-    def estimate_rel_scale(self, cam_prev, points3D_B1_curr):
+    def intersecting_matches(self, cam_prev, cam_curr):
 
-        tri_with_prev = cam_prev.tri_with_prev
-        tri_with_curr = cam_prev.tri_with_curr
+        prev_train_indices = cam_prev.train_indices
+        prev_query_indices = cam_prev.query_indices
+        curr_train_indices = cam_curr.train_indices
 
-        points3D_B1_prev = cam_prev.points3D_with_prev
+        # k-2 & k-1 matches ^ k-1 & k matches
+        ints_train_matches_indices = zeros(len(prev_train_indices)+len(prev_query_indices), dtype=int)
+        ints_query_matches_indices = zeros(len(prev_train_indices)+len(prev_query_indices), dtype=int)
 
-        sum_Z_B1_prev_X_Z_B1_curr = 0
-        sum_Z_B1_curr_X_Z_B1_curr = 0
+        # k-2, k-1, k kp indices
+        ints_prev_query_indices = zeros(len(prev_train_indices)+len(prev_query_indices), dtype=int)
+        ints_curr_train_indices = zeros(len(prev_train_indices)+len(prev_query_indices), dtype=int)
 
-        for i, prev_kpidx in enumerate(tri_with_prev):
+        ints_num = 0
 
-            j = where(tri_with_curr == prev_kpidx)[0]
+        for prev_train_match_idx, prev_train_idx in enumerate(prev_train_indices):
 
-            if len(j) != 0:
+            prev_query_match_idx = where(prev_query_indices == prev_train_idx)[0]
 
-                Z_B1_prev = points3D_B1_prev[2,i]    # keypoint with an index of prev_kpidx 
-                Z_B1_curr = points3D_B1_curr[2,j[0]]
+            if len(prev_query_match_idx) != 0:
+                # same keypoint detected in (k-2,k-1) & (k-1,k) matches 
 
-                sum_Z_B1_prev_X_Z_B1_curr += Z_B1_prev * Z_B1_curr
-                sum_Z_B1_curr_X_Z_B1_curr += Z_B1_curr * Z_B1_curr
-    
+                # matches[prev_matches_idx] and matches[curr_matches_idx] contains same keypoint of k-1 frame
+                ints_prev_query_indices[ints_num] = prev_train_idx
+                ints_curr_train_indices[ints_num] = curr_train_indices[prev_query_match_idx[0]]
+                
+                ints_train_matches_indices[ints_num]    = prev_train_match_idx
+                ints_query_matches_indices[ints_num]    = prev_query_match_idx
 
-        rel_scale = sum_Z_B1_prev_X_Z_B1_curr/sum_Z_B1_curr_X_Z_B1_curr
+                ints_num += 1
+
+        ints_train_matches_indices  = ints_train_matches_indices[:ints_num]
+        ints_query_matches_indices  = ints_query_matches_indices[:ints_num]
+        ints_prev_query_indices     = ints_prev_query_indices[:ints_num]
+        ints_curr_train_indices     = ints_curr_train_indices[:ints_num]
+
+        return ints_train_matches_indices, ints_query_matches_indices
+
+
+    def estimate_rel_scale(self, cam_prev, cam_curr, points3D_B1_curr):
+
+        points3D_B1_prev = cam_prev.train_points3D
+
+        train_match_indices, query_match_indices = self.intersecting_matches(cam_prev,cam_curr)
+
+        ints_Z_B1_prev = points3D_B1_prev[2,train_match_indices]
+        ints_Z_B1_curr = points3D_B1_curr[2,query_match_indices]
+
+        rel_scale = sqrt((ints_Z_B1_prev.T @ ints_Z_B1_prev) / (ints_Z_B1_curr.T @ ints_Z_B1_curr))
 
         return rel_scale
     
 
-    def propagate_P(self, cam_prev, cam_curr, T_B12B2):
+    def estimate_P_purerot(self, cam_prev, cam_curr, T_B12B2):
 
-        prev_tri_with_prev = cam_prev.tri_with_prev
-        prev_tri_with_curr = cam_prev.tri_with_curr
+        points3D_B1_prev = cam_prev.train_points3D
 
-        matched_1 = zeros(len(prev_tri_with_prev)+len(prev_tri_with_curr), dtype=int)
-        matched_2 = zeros(len(prev_tri_with_prev)+len(prev_tri_with_curr), dtype=int)
+        train_match_indices, query_match_indices = self.intersecting_matches(cam_prev,cam_curr)
 
-        matched_num = 0
+        cam_prev.query_indices      = cam_prev.query_indices[query_match_indices]
+        cam_curr.train_indices      = cam_curr.train_indices[query_match_indices]
 
-        for i, prev_kpidx in enumerate(prev_tri_with_prev):
+        cam_prev.query_intensity    = cam_prev.query_intensity[query_match_indices]
+        cam_curr.train_intensity    = cam_curr.train_intensity[query_match_indices]
 
-            j = where(prev_tri_with_curr == prev_kpidx)[0]
+        if len(points3D_B1_prev) != 0:
+    
+            cam_prev.query_points3D     = cam_prev.train_points3D[:,train_match_indices]
+            cam_curr.train_points3D     = T_B12B2 @ cam_prev.query_points3D
 
-            if len(j) != 0:
+        else: pass
 
-                matched_1[matched_num] = i
-                matched_2[matched_num] = j
-
-                matched_num += 1
-
-        matched_1 = matched_1[:matched_num]
-        matched_2 = matched_2[:matched_num]
-
-        cam_prev.tri_with_curr          = cam_prev.tri_with_curr[matched_2]
-        cam_prev.intensity_with_curr    = cam_prev.intensity_with_curr[matched_2]
-        cam_prev.points3D_with_curr     = cam_prev.points3D_with_prev[:,matched_1]
-
-        cam_curr.tri_with_prev          = cam_curr.tri_with_prev[matched_2]
-        cam_curr.intensity_with_prev    = cam_curr.intensity_with_prev[matched_2]
-
-        points3D_B2 = T_B12B2 @ cam_prev.points3D_with_curr
-
-        return points3D_B2
+        cam_curr.T_W2B = T_B12B2@cam_prev.T_W2B
+        cam_curr.T_B2W = inv(cam_curr.T_W2B)
 
 
     def track_pose(self, cam_prev, cam_curr):
@@ -225,44 +235,31 @@ class EpipolarGeom:
 
         '''
 
-        ### Translation Absolute Scale ###
-        scale = self.DataHub.PARAM_scale
-
         ### Estimate Transformation ###
-        T_B12B2, is_purerot = self.estimate_T(cam_prev,cam_curr,scale)
+        T_B12B2, is_purerot = self.estimate_T(cam_prev,cam_curr)
 
         
         ### Case #1 : Pure Rotation ###
         if is_purerot:
 
-            points3D_B1_prev = cam_prev.points3D_with_prev
-
-            ### Case #1-a : Prev fram is an initial Frame ###
-            if len(points3D_B1_prev) == 0:
-
-                ### Unable to Triangulate ###
-                cam_curr.T_W2B = T_B12B2@cam_prev.T_W2B
-                cam_curr.T_B2W = inv(cam_curr.T_W2B)
-
-            else:
-
-                ### Unable to Triangulate ###
-                cam_prev.points3D_with_curr = points3D_B1_prev
-                cam_curr.points3D_with_prev = self.propagate_P(cam_prev, cam_curr, T_B12B2)
-
-                cam_curr.T_W2B = T_B12B2@cam_prev.T_W2B
-                cam_curr.T_B2W = inv(cam_curr.T_W2B)
-
+            self.estimate_P_purerot(cam_prev,cam_curr,T_B12B2)
 
         else:
 
-            points3D_B1_prev = cam_prev.points3D_with_prev
-            points3D_B1_curr = self.estimate_P(cam_prev, cam_curr, T_B12B2)
+            points3D_B1_prev = cam_prev.train_points3D
+            points3D_B1_curr = self.estimate_P_general(cam_prev, cam_curr, T_B12B2)
 
             if len(points3D_B1_prev) == 0:
 
-                cam_prev.points3D_with_curr = points3D_B1_curr
-                cam_curr.points3D_with_prev = T_B12B2@points3D_B1_curr
+                abs_scale = self.DataHub.PARAM_scale
+
+                T_B12B2[:3,3] = abs_scale * T_B12B2[:3,3]
+
+                points3D_B1_curr_scaled = points3D_B1_curr
+                points3D_B1_curr_scaled[:3,:] = abs_scale * points3D_B1_curr_scaled[:3,:]
+
+                cam_prev.query_points3D = points3D_B1_curr_scaled
+                cam_curr.train_points3D = T_B12B2 @ points3D_B1_curr_scaled
                 
                 cam_curr.T_W2B = T_B12B2@cam_prev.T_W2B
                 cam_curr.T_B2W = inv(cam_curr.T_W2B)
@@ -270,15 +267,15 @@ class EpipolarGeom:
 
             else:
 
-                print(points3D_B1_prev)
-                print(points3D_B1_curr)
-
-                rel_scale = self.estimate_rel_scale(cam_prev, points3D_B1_curr)
+                rel_scale = self.estimate_rel_scale(cam_prev, cam_curr, points3D_B1_curr)
 
                 T_B12B2[:3,3] = rel_scale * T_B12B2[:3,3]
 
-                cam_prev.points3D_with_curr = rel_scale * points3D_B1_curr
-                cam_curr.points3D_with_prev = T_B12B2@(rel_scale * points3D_B1_curr)
+                points3D_B1_curr_scaled = points3D_B1_curr
+                points3D_B1_curr_scaled[:3,:] = rel_scale * points3D_B1_curr_scaled[:3,:]
+
+                cam_prev.query_points3D = points3D_B1_curr_scaled
+                cam_curr.train_points3D = T_B12B2 @ points3D_B1_curr_scaled
 
                 cam_curr.T_W2B = T_B12B2@cam_prev.T_W2B
                 cam_curr.T_B2W = inv(cam_curr.T_W2B)

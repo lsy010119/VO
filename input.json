@@ -30,7 +30,7 @@
     
         "PARAM_MAX_ITERATION"       : 300,
     
-        "PARAM_SCALE"               : 1.0
+        "PARAM_SCALE"               : 10.0
 
     },
 
@@ -39,7 +39,7 @@
 
         "INIT_POSE"                 : [ -135, 0, 0 ],
 
-        "INIT_LOCATION"             : [ 5, 0, 5 ]
+        "INIT_LOCATION"             : [ 30, 0, 30 ]
 
     }
 }

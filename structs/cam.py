@@ -35,15 +35,17 @@ class Cam:
         self.keypoints = array([])              # Keypoints
         self.desc      = array([])              # SIFT Descriptors
 
-        ### Point Coordinates ###
-        self.points3D = array([])               # Body Coordinate 3D Points
-        
-        self.points3D_with_prev = array([])     # Body Coordinate 3D Points triangulated with prev frame
-        self.points3D_with_curr = array([])     # Body Coordinate 3D Points triangulated with next frame
+        ### Maatched Feature Indices ###
+        self.train_indices = array([])          # Indices of KeyPoints matched with prev frame
+        self.query_indices = array([])          # Indices of KeyPoints matched with next frame
 
-        self.tri_with_prev = array([])          # Indices of Points triangulated with prev frame
-        self.tri_with_next = array([])          # Indices of Points triangulated with next frame
+        ### Point Coordinates ###
+        self.train_points2D = array([])         # Image Coordinate KeyPoints matched with prev frame
+        self.query_points2D = array([])         # Image Coordinate KeyPoints matched with next frame
+
+        self.train_points3D = array([])         # Body Coordinate 3D Points triangulated with prev frame
+        self.query_points3D = array([])         # Body Coordinate 3D Points triangulated with next frame
 
         ### Intensity ###
-        self.intensity_with_prev = array([])    # Intensity of keypoints matched with prev frame
-        self.intensity_with_curr = array([])    # Intensity of keypoints matched with curr frame
+        self.train_intensity = array([])        # Intensity of keypoints matched with prev frame
+        self.query_intensity = array([])        # Intensity of keypoints matched with curr frame

@@ -28,9 +28,9 @@ class Visualizer:
         y_w = array([[0],[1],[0],[1]],dtype=float)
         z_w = array([[0],[0],[1],[1]],dtype=float)
 
-        self.world.quiver(0,0,0,x_w[0,0],x_w[1,0],x_w[2,0],arrow_length_ratio=0.1,color='black')
-        self.world.quiver(0,0,0,y_w[0,0],y_w[1,0],y_w[2,0],arrow_length_ratio=0.1,color='black')
-        self.world.quiver(0,0,0,z_w[0,0],z_w[1,0],z_w[2,0],arrow_length_ratio=0.1,color='black')
+        self.world.quiver(0,0,0,x_w[0,0],x_w[1,0],x_w[2,0],arrow_length_ratio=0.1,length=self.DataHub.PARAM_scale,color='black')
+        self.world.quiver(0,0,0,y_w[0,0],y_w[1,0],y_w[2,0],arrow_length_ratio=0.1,length=self.DataHub.PARAM_scale,color='black')
+        self.world.quiver(0,0,0,z_w[0,0],z_w[1,0],z_w[2,0],arrow_length_ratio=0.1,length=self.DataHub.PARAM_scale,color='black')
         self.world.text(0,0,0,"O",style="normal")
         self.world.text(1,0,0,r"$X_w$",style="normal")
         self.world.text(0,1,0,r"$Y_w$",style="normal")
@@ -49,15 +49,15 @@ class Visualizer:
         z_c = T_B2W@z_w - reshape(T_B2W[:,3],(4,1))
 
         if color == 1:
-            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],x_c[0,0],x_c[1,0],x_c[2,0],color='red')
-            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],y_c[0,0],y_c[1,0],y_c[2,0],color='green')
-            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],z_c[0,0],z_c[1,0],z_c[2,0],color='blue')
+            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],x_c[0,0],x_c[1,0],x_c[2,0],length=self.DataHub.PARAM_scale,color='red')
+            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],y_c[0,0],y_c[1,0],y_c[2,0],length=self.DataHub.PARAM_scale,color='green')
+            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],z_c[0,0],z_c[1,0],z_c[2,0],length=self.DataHub.PARAM_scale,color='blue')
 
         else:
 
-            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],x_c[0,0],x_c[1,0],x_c[2,0],color='black')
-            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],y_c[0,0],y_c[1,0],y_c[2,0],color='black')
-            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],z_c[0,0],z_c[1,0],z_c[2,0],color='black')
+            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],x_c[0,0],x_c[1,0],x_c[2,0],length=self.DataHub.PARAM_scale,color='black')
+            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],y_c[0,0],y_c[1,0],y_c[2,0],length=self.DataHub.PARAM_scale,color='black')
+            self.world.quiver(T_B2W[0,3],T_B2W[1,3],T_B2W[2,3],z_c[0,0],z_c[1,0],z_c[2,0],length=self.DataHub.PARAM_scale,color='black')
 
 
 
@@ -149,10 +149,8 @@ class Visualizer:
             self.world.text(cam.T_B2W[0,3],cam.T_B2W[1,3],cam.T_B2W[2,3],f"{i}",style="normal")
 
             try:
-                self.viz_points(cam.T_B2W@cam.points3D_with_prev, cam.intensity_with_prev)
+                self.viz_points(cam.T_B2W@cam.query_points3D, cam.query_intensity)
             except: pass
-
-            print(i)
 
         self.world.plot(traj[0],traj[1],traj[2],'r-')
 

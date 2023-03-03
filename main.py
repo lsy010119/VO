@@ -43,7 +43,7 @@ class VO:
 		cam_list = []
 		cam_hist = []
 
-		for i in range(0,3,1):
+		for i in range(0,9,1):
 
 			img = cv2.imread("./frames/frame000"+str(i)+".jpg",0)
 			img_undist = cv2.undistort(img,self.DataHub.K,self.DataHub.dist_coeff)
@@ -57,7 +57,7 @@ class VO:
 
 		cam_hist.append(cam_list[0])
 
-		for i in range(1,3,1):
+		for i in range(1,9,1):
 
 			cam_prev = cam_list[i-1]
 			cam_curr = cam_list[i]
@@ -72,7 +72,7 @@ class VO:
 			cam_hist.append(cam_curr)
 
 
-		# self.Visualizer.viz_points(cam_curr.T_B2W@cam_curr.points3D_with_prev, cam_curr.intensity_with_prev)
+		# self.Visualizer.viz_points(cam_curr.T_B2W@cam_curr.train_points3D, cam_curr.train_intensity)
 		self.Visualizer.viz_trajec(cam_hist)
 		self.Visualizer.run()
 

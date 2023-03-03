@@ -32,43 +32,44 @@ class FeatureMatcher:
         matches = sorted(matches, key = lambda x : x.distance)[:N_match]
 
         ### Initializing memories ###
-        points2D_1      = ones((3,N_match)) # 2D Point coordinations of prev frame matched with curr frame 
-        points2D_2      = ones((3,N_match)) # 2D Point coordinations of curr frame matched with prev frame
+        query_points2D      = ones((3,N_match)) # 2D Point coordinations of prev frame matched with curr frame 
+        train_points2D      = ones((3,N_match)) # 2D Point coordinations of curr frame matched with prev frame
 
-        tri_with_curr   = zeros(N_match)    # 2D Point indices of prev frame matched with curr frame
-        tri_with_prev   = zeros(N_match)    # 2D Point indices of curr frame matched with prev frame
+        query_indices       = zeros(N_match)    # 2D Point indices of prev frame matched with curr frame
+        train_indices       = zeros(N_match)    # 2D Point indices of curr frame matched with prev frame
 
-        intensity_1     = zeros(N_match)    # intensity of points in prev frame
-        intensity_2     = zeros(N_match)    # intensity of points in curr frame
+        query_intensity     = zeros(N_match)    # intensity of points in prev frame
+        train_intensity     = zeros(N_match)    # intensity of points in curr frame
 
         for idx, match in enumerate(matches):
 
-            point_matched_1     = cam_prev.keypoints[match.queryIdx]
-            point_matched_2     = cam_curr.keypoints[match.trainIdx]
+            query_keypoint     = cam_prev.keypoints[match.queryIdx]
+            train_keypoint     = cam_curr.keypoints[match.trainIdx]
 
 
-            points2D_1[0,idx]   = point_matched_1.pt[0]
-            points2D_1[1,idx]   = point_matched_1.pt[1]
+            query_points2D[0,idx]   = query_keypoint.pt[0]
+            query_points2D[1,idx]   = query_keypoint.pt[1]
 
-            points2D_2[0,idx]   = point_matched_2.pt[0]
-            points2D_2[1,idx]   = point_matched_2.pt[1]
+            train_points2D[0,idx]   = train_keypoint.pt[0]
+            train_points2D[1,idx]   = train_keypoint.pt[1]
 
-            tri_with_curr[idx]  = match.queryIdx
-            tri_with_prev[idx]  = match.trainIdx
+            query_indices[idx]  = match.queryIdx
+            train_indices[idx]  = match.trainIdx
 
-            intensity_1[idx]    = cam_prev.img[int(point_matched_1.pt[1]),int(point_matched_1.pt[0])]
-            intensity_2[idx]    = cam_curr.img[int(point_matched_2.pt[1]),int(point_matched_2.pt[0])]
+            query_intensity[idx]    = cam_prev.img[int(query_keypoint.pt[1]),int(query_keypoint.pt[0])]
+            train_intensity[idx]    = cam_curr.img[int(train_keypoint.pt[1]),int(train_keypoint.pt[0])]
         
-        cam_prev.points2D_with_curr   = points2D_1
-        cam_curr.points2D_with_prev   = points2D_2
+        cam_prev.query_points2D   = query_points2D
+        cam_curr.train_points2D   = train_points2D
 
-        cam_prev.tri_with_curr        = tri_with_curr
-        cam_curr.tri_with_prev        = tri_with_prev
+        cam_prev.query_indices    = query_indices
+        cam_curr.train_indices    = train_indices
 
-        cam_prev.intensity_with_curr  = intensity_1
-        cam_curr.intensity_with_prev  = intensity_2
+        cam_prev.query_intensity  = query_intensity
+        cam_curr.train_intensity  = train_intensity
         
-        # img3 = cv2.drawMatches(cam_prev.img, cam_prev.keypoints, cam_curr.img, cam_curr.keypoints, matches[:N_match], cam_curr.img)
+        img3 = cv2.drawMatches(cam_prev.img, cam_prev.keypoints, cam_curr.img, cam_curr.keypoints, matches[:N_match], cam_curr.img)
 
         # cv2.imshow("A",img3)
-        # cv2.waitKey(1)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
