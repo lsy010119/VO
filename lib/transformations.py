@@ -77,8 +77,6 @@ def w2R(w):
 
         R = (1-cos(angle))*(n_w_hat @ n_w_hat) + sin(angle)*n_w_hat + eye(3)
 
-        R = R.T
-
     return R
 
 

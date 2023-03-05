@@ -60,6 +60,16 @@ class DataHub:
 
 
         """ Optimizer Matrices """
+        self.F_p                            = zeros((self.PARAM_mtchth*2,1),                  dtype=float)
+        self.F_c                            = zeros((self.PARAM_mtchth*2,1),                  dtype=float)
+        
+        self.J                              = zeros((self.PARAM_mtchth*2,self.PARAM_mtchth+6),dtype=float)
+        
+        self.H                              = zeros((self.PARAM_mtchth+6,self.PARAM_mtchth+6),dtype=float)
+        self.H_mod                          = zeros((self.PARAM_mtchth+6,self.PARAM_mtchth+6),dtype=float)
+        
+        self.x_p                            = zeros((self.PARAM_mtchth+6),                    dtype=float)
+        self.x_c                            = zeros((self.PARAM_mtchth+6),                    dtype=float)
 
 
         """ Points """

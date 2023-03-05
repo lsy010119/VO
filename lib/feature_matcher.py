@@ -25,11 +25,13 @@ class FeatureMatcher:
         matches = self.matcher.match(cam_prev.desc, cam_curr.desc)
 
         ### Cliping match number ###
-        if len(matches) > self.DataHub.PARAM_mtchth: N_match = self.DataHub.PARAM_mtchth 
+        if len(matches) >= self.DataHub.PARAM_mtchth: N_match = self.DataHub.PARAM_mtchth 
         else: N_match = len(matches)
 
         ### Filtering Well-Matched points ###
         matches = sorted(matches, key = lambda x : x.distance)[:N_match]
+
+        print(len(matches))
 
         ### Initializing memories ###
         query_points2D      = ones((3,N_match)) # 2D Point coordinations of prev frame matched with curr frame 

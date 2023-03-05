@@ -58,7 +58,7 @@ class EpipolarGeom:
 
         is_purerot = False
 
-        if norm(diagonal(E)) < 0.01:
+        if norm(diagonal(E)) < 0.000001:
             ### Pure Rotation ###
 
             is_purerot = True

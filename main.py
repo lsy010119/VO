@@ -12,6 +12,7 @@ from lib.feature_extracter      import FeatureExtracter
 from lib.feature_matcher      	import FeatureMatcher
 from lib.frame					import FrameHandler
 from lib.visualizer             import Visualizer
+from lib.bundle_adjustment		import BundleAdjustment
 
 import os
 import json
@@ -35,7 +36,8 @@ class VO:
 		self.EplipolarGeom 		= EpipolarGeom		(self.DataHub)
 		self.FeatureExtracter	= FeatureExtracter	(self.DataHub)
 		self.FeatureMatcher		= FeatureMatcher	(self.DataHub)
-		self.Visualizer 		= Visualizer		(self.DataHub)
+		# self.Visualizer 		= Visualizer		(self.DataHub)
+		self.BundleAdjuster		= BundleAdjustment	(self.DataHub)
 
 
 	def run_test(self):
@@ -68,13 +70,15 @@ class VO:
 			self.FeatureMatcher.match_feature(cam_prev,cam_curr)
 
 			T_B12B2 , cam_prev, cam_curr = self.EplipolarGeom.track_pose(cam_prev,cam_curr)
-
+			
+			self.BundleAdjuster.run(cam_prev, cam_curr, T_B12B2)
+			
 			cam_hist.append(cam_curr)
 
 
 		# self.Visualizer.viz_points(cam_curr.T_B2W@cam_curr.train_points3D, cam_curr.train_intensity)
-		self.Visualizer.viz_trajec(cam_hist)
-		self.Visualizer.run()
+		# self.Visualizer.viz_trajec(cam_hist)
+		# self.Visualizer.run()
 
 
 
@@ -108,8 +112,10 @@ class VO:
 
 			T_B12B2 , cam_prev, cam_curr = self.EplipolarGeom.track_pose(cam_prev,cam_curr)
 
-			print(T_B12B2)
-			# cam_hist.append(cam_curr)
+			self.BundleAdjuster.run(cam_prev, cam_curr, T_B12B2)
+
+			# print(T_B12B2)
+			cam_hist.append(cam_curr)
 
 			end = time.time()
 			time.sleep(1/30)
