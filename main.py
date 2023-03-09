@@ -36,7 +36,7 @@ class VO:
 		self.EplipolarGeom 		= EpipolarGeom		(self.DataHub)
 		self.FeatureExtracter	= FeatureExtracter	(self.DataHub)
 		self.FeatureMatcher		= FeatureMatcher	(self.DataHub)
-		# self.Visualizer 		= Visualizer		(self.DataHub)
+		self.Visualizer 		= Visualizer		(self.DataHub)
 		self.BundleAdjuster		= BundleAdjustment	(self.DataHub)
 
 
@@ -59,12 +59,13 @@ class VO:
 
 		cam_hist.append(cam_list[0])
 
+		self.FeatureExtracter.extract_feature(cam_list[0])
+		
 		for i in range(1,9,1):
 
 			cam_prev = cam_list[i-1]
 			cam_curr = cam_list[i]
 
-			self.FeatureExtracter.extract_feature(cam_prev)
 			self.FeatureExtracter.extract_feature(cam_curr)
 
 			self.FeatureMatcher.match_feature(cam_prev,cam_curr)
@@ -76,9 +77,9 @@ class VO:
 			cam_hist.append(cam_curr)
 
 
-		# self.Visualizer.viz_points(cam_curr.T_B2W@cam_curr.train_points3D, cam_curr.train_intensity)
-		# self.Visualizer.viz_trajec(cam_hist)
-		# self.Visualizer.run()
+		self.Visualizer.viz_points(cam_curr.T_B2W@cam_curr.train_points3D, cam_curr.train_intensity)
+		self.Visualizer.viz_trajec(cam_hist)
+		self.Visualizer.run()
 
 
 

@@ -50,6 +50,7 @@ class DataHub:
         
         ### Feature Handling Paramters ###
         self.PARAM_mtchth                   = params["PARAM_MATCH_THRESHOLD"]
+        self.PARAM_inlrth                   = params["PARAM_INLIER_THRESHOLD"]
 
         ### Optimization Parameters ###
         self.PARAM_stpcrt                   = params["PARAM_STOPPING_CRITERION"]

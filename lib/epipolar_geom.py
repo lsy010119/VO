@@ -45,6 +45,8 @@ class EpipolarGeom:
         ### Outliers Filtering ###
         inlier_idx = where(mask==1)[0]
 
+        inlier_idx = inlier_idx[:self.DataHub.PARAM_inlrth]
+
         cam_prev.query_points2D = cam_prev.query_points2D[:,inlier_idx]
         cam_curr.train_points2D = cam_curr.train_points2D[:,inlier_idx]
 

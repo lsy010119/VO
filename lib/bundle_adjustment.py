@@ -15,7 +15,7 @@ class BundleAdjustment:
         
         self.DataHub = DataHub
 
-        self.N = DataHub.PARAM_mtchth
+        self.N = DataHub.PARAM_inlrth
 
         self.x_p        = zeros((self.N+6),                      dtype=float)
         self.x_c        = zeros((self.N+6),                      dtype=float)
@@ -110,8 +110,8 @@ class BundleAdjustment:
 
         self.H = self.J.T @ self.J
 
-        self.H = (self.H + lam*eye(self.N+6))
-        # self.H = (self.H + lam*diag(diag(self.H)))
+        # self.H = (self.H + lam*eye(self.N+6))
+        self.H = (self.H + lam*diag(diag(self.H)))
 
 
     def _update_delx(self):
@@ -137,9 +137,6 @@ class BundleAdjustment:
 
         # fig = plt.figure().add_subplot(1,1,1)
 
-        # cost = []
-
-
         lam = 0.1
         stop = self.DataHub.PARAM_stpcrt
         N_iter = self.DataHub.PARAM_maxitr
@@ -156,9 +153,9 @@ class BundleAdjustment:
         #########
         # fig.cla()
 
-        # Z2 = P2[2]
+        Z2 = P2[2]
 
-        # p2_hat = K@P2/Z2
+        p2_hat = K@P2/Z2
 
         # fig.imshow(img,cmap='Greys_r')
 
@@ -183,6 +180,9 @@ class BundleAdjustment:
 
         #########
 
+        print(norm(p2_hat - p2))
+
+
         self.x_c = x_init
         self.x_p = self.x_c.copy()
 
@@ -192,8 +192,6 @@ class BundleAdjustment:
         self._update_delx()
 
         self.x_c = self.x_c + self.del_x[:,0]
-
-        # cost.append(norm(self.F_c))
 
         for _ in range(N_iter-1):
 
@@ -256,6 +254,7 @@ class BundleAdjustment:
                 if (norm_F_1 - norm_F_2)/norm_F_1 <= stop:
 
                     print("converged")
+                    print(norm_F_2)
                     break
 
                 lam *= 0.5
@@ -266,6 +265,13 @@ class BundleAdjustment:
                 self.x_c = self.x_c + self.del_x[:,0]
 
                 lam *= 1.2
+
+        # R_opt = w2R(self.x_c[-6:-3])
+        # t_opt = self.x_c[-3:]
+
+        # T_B12B2_opt = block([[R_opt, t_opt],[0,0,0,1]])
+
+        # query_points3D_opt = K_inv @ (self.x_c[:-6])
 
         # plt.plot(arange(len(cost)),cost)
 

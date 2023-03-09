@@ -70,7 +70,7 @@ class FeatureMatcher:
         cam_prev.query_intensity  = query_intensity
         cam_curr.train_intensity  = train_intensity
         
-        img3 = cv2.drawMatches(cam_prev.img, cam_prev.keypoints, cam_curr.img, cam_curr.keypoints, matches[:N_match], cam_curr.img)
+        # img3 = cv2.drawMatches(cam_prev.img, cam_prev.keypoints, cam_curr.img, cam_curr.keypoints, matches[:N_match], cam_curr.img)
 
         # cv2.imshow("A",img3)
         # cv2.waitKey(0)
